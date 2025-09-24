@@ -181,4 +181,4 @@ For support and questions:
 
 ---
 
-**Built for Smart India Hackathon 2024** 🇮🇳
+**Built for Smart India Hackathon 2025**
