@@ -157,7 +157,7 @@ export default function Dashboard() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Trending Issues</CardTitle>
+                <CardTitle>Nearby Issues</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 {issues.slice(0,5).map((t) => (

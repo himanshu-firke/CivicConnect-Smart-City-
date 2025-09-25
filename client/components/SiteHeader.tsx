@@ -78,15 +78,17 @@ export default function SiteHeader() {
       >
         Home
       </Link>
-      <Link
-        to="/dashboard"
-        className={cn(
-          "rounded-md px-3 py-1.5 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
-          location.pathname.startsWith("/dashboard") && "text-primary",
-        )}
-      >
-        Dashboard
-      </Link>
+      {(!auth.user || auth.user.role !== "citizen") && (
+        <Link
+          to="/dashboard"
+          className={cn(
+            "rounded-md px-3 py-1.5 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
+            location.pathname.startsWith("/dashboard") && "text-primary",
+          )}
+        >
+          Dashboard
+        </Link>
+      )}
       {auth.user && auth.user.role === "citizen" && (
         <Link
           to="/my-history"

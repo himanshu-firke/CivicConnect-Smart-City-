@@ -7,17 +7,17 @@ import { useAuth } from "@/context/AuthContext";
 
 export default function MyHistory() {
   const auth = useAuth();
-  const [resolved, setResolved] = useState<any[]>([]);
+  const [myIssues, setMyIssues] = useState<any[]>([]);
 
   useEffect(() => {
     const all = loadIssues();
     if (!auth.user) return;
     const me = auth.user;
-    setResolved(all.filter((i:any)=>i.status === 'Resolved' && (i.reporterPhone === me.phone || i.reporterName === me.name)));
+    setMyIssues(all.filter((i:any)=>(i.reporterPhone === me.phone || i.reporterName === me.name)));
 
     const onUpdate = () => {
       const latest = loadIssues();
-      setResolved(latest.filter((i:any)=>i.status === 'Resolved' && (i.reporterPhone === me.phone || i.reporterName === me.name)));
+      setMyIssues(latest.filter((i:any)=>(i.reporterPhone === me.phone || i.reporterName === me.name)));
     };
     window.addEventListener('civicai_issues_updated', onUpdate as EventListener);
     return () => window.removeEventListener('civicai_issues_updated', onUpdate as EventListener);
@@ -29,14 +29,14 @@ export default function MyHistory() {
       <main className="container p-4">
         <div className="flex flex-col gap-4">
           <div>
-            <h2 className="text-2xl font-semibold">Your Resolved Reports</h2>
-            <div className="text-sm text-muted-foreground">All issues you reported that were resolved</div>
+            <h2 className="text-2xl font-semibold">Your Reports History</h2>
+            <div className="text-sm text-muted-foreground">All issues you have reported</div>
           </div>
 
           <Card>
             <CardHeader>
               <CardTitle>History</CardTitle>
-              <CardDescription>Your resolved reports</CardDescription>
+              <CardDescription>All your reported issues</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="overflow-auto">
@@ -46,18 +46,28 @@ export default function MyHistory() {
                       <TableHead>ID</TableHead>
                       <TableHead>Type</TableHead>
                       <TableHead>Location</TableHead>
-                      <TableHead>Resolved At</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Date</TableHead>
                       <TableHead>Assigned</TableHead>
                       <TableHead>Image</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {resolved.map((r) => (
+                    {myIssues.map((r) => (
                       <TableRow key={r.id}>
                         <TableCell>{r.id}</TableCell>
                         <TableCell>{r.type}</TableCell>
                         <TableCell>{r.address ?? '—'}</TableCell>
-                        <TableCell>{r.resolvedAt ? new Date(r.resolvedAt).toLocaleString() : new Date(r.createdAt).toLocaleString()}</TableCell>
+                        <TableCell>
+                          <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs ${
+                            r.status === 'Resolved' ? 'bg-green-100 text-green-800' : 
+                            r.status === 'In Progress' ? 'bg-yellow-100 text-yellow-800' : 
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {r.status || 'Pending'}
+                          </span>
+                        </TableCell>
+                        <TableCell>{new Date(r.createdAt).toLocaleString()}</TableCell>
                         <TableCell>{r.assignedTo ?? '—'}{r.assignedContact ? ` (${r.assignedContact})` : ''}</TableCell>
                         <TableCell>{r.photo ? <img src={r.photo} alt={r.type} className="h-14 w-20 object-cover rounded" /> : '—'}</TableCell>
                       </TableRow>
