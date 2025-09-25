@@ -10,6 +10,8 @@ type ToasterToast = ToastProps & {
   title?: React.ReactNode;
   description?: React.ReactNode;
   action?: ToastActionElement;
+  // Explicitly include variant to allow calls like toast({ variant: "destructive", ... })
+  variant?: "default" | "destructive";
 };
 
 const actionTypes = {

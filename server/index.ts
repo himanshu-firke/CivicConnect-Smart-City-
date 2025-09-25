@@ -10,6 +10,8 @@ export function createServer() {
   app.use(cors());
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
+  // Serve static files from public (e.g., /favicon.ico)
+  app.use(express.static("public"));
 
   // Example API routes
   app.get("/api/ping", (_req, res) => {

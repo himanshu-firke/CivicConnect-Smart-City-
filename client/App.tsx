@@ -14,6 +14,9 @@ import AdminDashboard from "./pages/AdminDashboard";
 import History from "./pages/History";
 import MyHistory from "./pages/MyHistory";
 import Marketplace from "./pages/Marketplace";
+import Workers from "@/pages/Workers";
+import DeptAdmins from "@/pages/DeptAdmins";
+import MunicipalWorkers from "@/pages/MunicipalWorkers";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 
 const queryClient = new QueryClient();
@@ -38,6 +41,22 @@ function RequireAdmin({ children }: { children: JSX.Element }) {
   return children;
 }
 
+function RequireDeptAdminNonMunicipal({ children }: { children: JSX.Element }) {
+  const { user } = useAuth();
+  if (!user) return <Navigate to="/" replace />;
+  if (user.role !== "admin") return <Navigate to="/" replace />;
+  if (user.department === "Municipal") return <Navigate to="/admin" replace />;
+  return children;
+}
+
+function RequireMunicipal({ children }: { children: JSX.Element }) {
+  const { user } = useAuth();
+  if (!user) return <Navigate to="/" replace />;
+  if (user.role !== "admin") return <Navigate to="/" replace />;
+  if (user.department !== "Municipal") return <Navigate to="/" replace />;
+  return children;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
@@ -50,6 +69,9 @@ const App = () => (
             <Route path="/dashboard" element={<RequireCitizen><Dashboard /></RequireCitizen>} />
             <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
             <Route path="/history" element={<RequireAdmin><History /></RequireAdmin>} />
+            <Route path="/workers" element={<RequireDeptAdminNonMunicipal><Workers /></RequireDeptAdminNonMunicipal>} />
+            <Route path="/dept-admins" element={<RequireMunicipal><DeptAdmins /></RequireMunicipal>} />
+            <Route path="/municipal-workers" element={<RequireMunicipal><MunicipalWorkers /></RequireMunicipal>} />
             <Route path="/my-history" element={<RequireCitizen><MyHistory /></RequireCitizen>} />
             <Route path="/marketplace" element={<RequireCitizen><Marketplace /></RequireCitizen>} />
             <Route path="/report" element={<RequireCitizen><Report /></RequireCitizen>} />

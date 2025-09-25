@@ -1,8 +1,11 @@
 import SiteHeader from "@/components/SiteHeader";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/components/ui/use-toast";
 
 const items = [
   { id: 'recycled-paper', title: 'Recycled Paper Notebooks (3-pack)', price: 60, description: 'Notebooks made from post-consumer recycled paper', img: 'https://images.unsplash.com/photo-1569690484582-58b478f46805?q=80&w=890&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
@@ -17,19 +20,49 @@ const items = [
 
 export default function Marketplace(){
   const auth = useAuth();
-  const [message, setMessage] = useState<string | null>(null);
+  const { toast } = useToast();
+  const [open, setOpen] = useState(false);
+  const [selected, setSelected] = useState<typeof items[number] | null>(null);
+  const [qty, setQty] = useState(1);
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [agree, setAgree] = useState(false);
+  const resetForm = () => { setQty(1); setPhone(""); setAddress(""); setAgree(false); };
 
-  function buy(item: typeof items[number]){
+  function startCheckout(item: typeof items[number]){
     if(!auth.user){
-      setMessage('Sign in to purchase');
+      toast({ variant: "destructive", title: "Sign in required", description: "Please sign in to purchase." });
       return;
     }
-    if((auth.user.civicCoins||0) < item.price){
-      setMessage('Insufficient CivicCoins');
+    setSelected(item);
+    setOpen(true);
+  }
+
+  function validate(): string | null {
+    if (!selected) return 'No item selected';
+    if (!auth.user) return 'Please sign in';
+    if (qty < 1 || qty > 10) return 'Quantity must be between 1 and 10';
+    const total = selected.price * qty;
+    if ((auth.user.civicCoins||0) < total) return `Insufficient CivicCoins. Need ${total} 🪙`;
+    if (!/^[0-9+\-\s]{8,15}$/.test(phone)) return 'Enter a valid phone number';
+    if (address.trim().length < 8) return 'Enter a valid delivery address (min 8 chars)';
+    if (!agree) return 'Please accept the terms to proceed';
+    return null;
+  }
+
+  function confirmPurchase(){
+    const err = validate();
+    if (err){
+      toast({ variant: "destructive", title: "Checkout error", description: err });
       return;
     }
-    auth.spendCoins(item.price);
-    setMessage(`Purchased ${item.title} for ${item.price} 🪙`);
+    if (!selected) return;
+    const total = selected.price * qty;
+    auth.spendCoins(total, `Marketplace: ${selected.title} x${qty}`);
+    toast({ title: "Purchase successful", description: `Purchased ${selected.title} x${qty} for ${total} 🪙. Delivery to: ${address}` });
+    setOpen(false);
+    resetForm();
+    setSelected(null);
   }
 
   return (
@@ -64,15 +97,60 @@ export default function Marketplace(){
                     </div>
                   </div>
                   <div className="mt-3 flex gap-2">
-                    <Button onClick={()=>buy(it)} className="flex-1">Buy</Button>
-                    <Button variant="outline" onClick={()=>setMessage(it.description)}>Info</Button>
+                    <Button onClick={()=>startCheckout(it)} className="flex-1">Buy</Button>
+                    <Button
+                      variant="outline"
+                      onClick={()=>toast({ title: it.title, description: it.description })}
+                    >
+                      Info
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
 
-          {message && <div className="text-sm text-muted-foreground">{message}</div>}
+          {/* Checkout Dialog */}
+          <Dialog open={open} onOpenChange={(o)=>{ setOpen(o); if(!o){ resetForm(); setSelected(null);} }}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Checkout</DialogTitle>
+                <DialogDescription>Confirm your purchase details</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="font-medium">{selected?.title}</div>
+                  <div className="text-sm text-muted-foreground">Price: {selected?.price} 🪙</div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs text-muted-foreground">Quantity (1-10)</label>
+                    <Input type="number" min={1} max={10} value={qty} onChange={(e)=>setQty(Math.max(1, Math.min(10, parseInt(e.target.value||'1'))))} />
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground">Phone</label>
+                    <Input placeholder="e.g. +91-9876543210" value={phone} onChange={(e)=>setPhone(e.target.value)} />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">Delivery Address</label>
+                  <Input placeholder="House no, street, area, city" value={address} onChange={(e)=>setAddress(e.target.value)} />
+                </div>
+                <div className="flex items-center gap-2">
+                  <input id="agree" type="checkbox" checked={agree} onChange={(e)=>setAgree(e.target.checked)} />
+                  <label htmlFor="agree" className="text-xs text-muted-foreground">I agree to the marketplace terms and refund policy</label>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="text-sm">Total: <span className="font-semibold">{(selected?.price||0) * qty} 🪙</span></div>
+                  <div className="text-xs text-muted-foreground">Balance: {auth.user?.civicCoins ?? 0} 🪙</div>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={()=>{ setOpen(false); }}>Cancel</Button>
+                <Button onClick={confirmPurchase}>Confirm & Pay</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </main>
     </div>

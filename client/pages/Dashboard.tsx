@@ -26,7 +26,7 @@ export default function Dashboard() {
         try{
           const mapEl = document.getElementById('map');
           if (!mapEl) return;
-          const map = L.map(mapEl as HTMLElement).setView([28.497, 77.07], 13);
+          const map = L.map(mapEl as HTMLElement).setView([21.0045, 75.5661], 13);
           L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap contributors'
           }).addTo(map);
@@ -40,7 +40,7 @@ export default function Dashboard() {
           });
 
           // add five nearby demo markers cluster
-          const base:[number,number] = [28.497, 77.07];
+          const base:[number,number] = [21.0045, 75.5661];
           const offsets = [
             [0.003, 0.002],
             [-0.0025, 0.0015],

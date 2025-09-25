@@ -78,7 +78,7 @@ export default function SiteHeader() {
       >
         Home
       </Link>
-      {(!auth.user || auth.user.role !== "citizen") && (
+      {(!auth.user) && (
         <Link
           to="/dashboard"
           className={cn(
@@ -109,6 +109,30 @@ export default function SiteHeader() {
           )}
         >
           History
+        </Link>
+      )}
+      {auth.user && auth.user.role === "admin" && auth.user.department === "Municipal" && (
+        <>
+          <Link
+            to="/dept-admins"
+            className={cn(
+              "rounded-md px-3 py-1.5 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
+              location.pathname.startsWith("/dept-admins") && "text-primary",
+            )}
+          >
+            Dept Admins
+          </Link>
+        </>
+      )}
+      {auth.user && auth.user.role === "admin" && auth.user.department !== "Municipal" && (
+        <Link
+          to="/workers"
+          className={cn(
+            "rounded-md px-3 py-1.5 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
+            location.pathname.startsWith("/workers") && "text-primary",
+          )}
+        >
+          Workers
         </Link>
       )}
       {(!auth.user || auth.user.role === "citizen") && (

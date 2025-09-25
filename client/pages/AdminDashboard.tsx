@@ -53,7 +53,7 @@ export default function AdminDashboard() {
         try {
           const el = document.getElementById("admin-map");
           if (!el || !L) return;
-          const map = L.map(el as HTMLElement).setView([28.497, 77.07], 12);
+          const map = L.map(el as HTMLElement).setView([21.0045, 75.5661], 12);
           L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "&copy; OpenStreetMap contributors" }).addTo(map);
           const deptIssues = loadIssues().filter((i: any) => i.department === auth.user?.department);
           deptIssues.forEach((it: any) => {

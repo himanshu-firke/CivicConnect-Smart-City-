@@ -16,7 +16,7 @@ type AuthContextType = {
   login: (email: string, password: string) => boolean;
   logout: () => void;
   addCoins: (amount: number) => void;
-  spendCoins: (amount: number) => void;
+  spendCoins: (amount: number, reason?: string) => void;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
